@@ -1,8 +1,8 @@
 import streamlit as st
 import pandas as pd
-from utils.comparator import compute_differences
-from utils.similarity import compute_similarity
-from utils.persistence import load_persistent_files
+from utils.comparator import run_full_comparison
+from utils.similarity import compute_similarity_summary
+from utils.persistence import load_history
 
 st.set_page_config(
     page_title="Security Group Analysis",
