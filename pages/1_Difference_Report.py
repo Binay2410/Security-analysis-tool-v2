@@ -1,95 +1,45 @@
-import streamlit as st
-from utils.comparator import compute_differences
-import pandas as pd
-
-st.title("📘 Difference Report")
-
-# Ensure data exists
-if "client_df" not in st.session_state or "std_df" not in st.session_state:
-    st.error("Please upload a client file on the main page.")
-    st.stop()
-
-client_df = st.session_state["client_df"]
-std_df = st.session_state["std_df"]
-
-@st.cache_data(show_spinner=True)
-def get_differences(std_df, client_df):
-    return compute_differences(std_df, client_df)
-
-only_in_std, only_in_client, diff_table = get_differences(std_df, client_df)
-
 # -----------------------------
-# Section headings
+# Helper: extract difference items with formatting
 # -----------------------------
-st.subheader("❌ Security Group(s) does not exist in tenant")
-st.dataframe({"Security Group": only_in_std})
-
-st.subheader("⚠️ Custom Security Group(s)")
-st.dataframe({"Security Group": only_in_client})
-
-st.subheader("🟰 Detailed Row-Level Differences")
-
-if diff_table.empty:
-    st.info("✔ No row-level differences found.")
-    st.stop()
-
-# -----------------------------
-# Rename columns as requested
-# -----------------------------
-diff_table = diff_table.rename(columns={
-    "SG Name": "Security Group",
-    "Column": "Access Type"
-})
-
-# -----------------------------
-# Helper: extract difference items
-# -----------------------------
-def extract_diff_items(std_val: str, client_val: str) -> str:
-    """
-    From two multi-line strings (Standard Value, Client Value),
-    return only the items that are different.
-
-    Example:
-    Standard: A, B, C, D
-    Client:   A, C
-    Result:   B, D
-    """
+def extract_diff_items_formatted(std_val: str, client_val: str) -> str:
     # Convert to list of stripped lines
-    std_items = [
+    std_items = {
         line.strip()
         for line in str(std_val).splitlines()
-        if line is not None and str(line).strip() != ""
-    ]
-    client_items = [
+        if str(line).strip() != ""
+    }
+    client_items = {
         line.strip()
         for line in str(client_val).splitlines()
-        if line is not None and str(line).strip() != ""
-    ]
+        if str(line).strip() != ""
+    }
 
-    std_set = set(std_items)
-    client_set = set(client_items)
+    missing_items = sorted(list(std_items - client_items))
+    extra_items = sorted(list(client_items - std_items))
 
-    # Items that differ between Standard and Client
-    # You can choose:
-    # - only missing from client: std_set - client_set
-    # - OR symmetric diff (both missing and extra): (std_set - client_set) ∪ (client_set - std_set)
-    diff_items = sorted(list(std_set - client_set))  # <- only items missing in client
+    formatted = []
 
-    # If you also want Extra items from client, use:
-    # diff_items = sorted(list((std_set - client_set) | (client_set - std_set)))
+    # Missing items → RED label
+    for item in missing_items:
+        formatted.append(f"<span style='color:red; font-weight:bold'>Missing:</span> {item}")
 
-    return "\n".join(diff_items)
+    # Extra items → black label
+    for item in extra_items:
+        formatted.append(f"<span style='color:black'>Extra:</span> {item}")
+
+    return "<br>".join(formatted)
+
 
 # -----------------------------
-# Build Difference Items column
+# Build HTML formatted Difference Items column
 # -----------------------------
 diff_table["Difference Items"] = diff_table.apply(
-    lambda row: extract_diff_items(row["Standard Value"], row["Client Value"]),
+    lambda row: extract_diff_items_formatted(row["Standard Value"], row["Client Value"]),
     axis=1
 )
 
 # -----------------------------
-# Reorder and display
+# Final reorder
 # -----------------------------
 display_cols = [
     "Security Group",
@@ -99,6 +49,11 @@ display_cols = [
     "Difference Items"
 ]
 
-diff_table = diff_table[display_cols]
+display_df = diff_table[display_cols].copy()
 
-st.dataframe(diff_table, use_container_width=True)
+# -----------------------------
+# Render using Styler to allow HTML
+# -----------------------------
+styled_df = display_df.style.format(escape=False)
+
+st.write(styled_df.to_html(), unsafe_allow_html=True)
