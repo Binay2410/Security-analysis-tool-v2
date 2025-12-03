@@ -1,59 +1,40 @@
 import pandas as pd
 
-SG_KEY = "Domains granted to Security Group"
+def compute_differences(std_df: pd.DataFrame, client_df: pd.DataFrame):
+    """
+    Computes:
+    - SGs missing in client
+    - SGs only in client
+    - Detailed differences
+    """
 
-def normalize_key(df):
-    df[SG_KEY] = (
-        df[SG_KEY]
-        .astype(str)
-        .str.strip()
-        .str.lower()
-    )
-    return df
+    std_set = set(std_df["SG Name"])
+    client_set = set(client_df["SG Name"])
 
-def compute_differences(client_df, standard_df):
-    # Normalize SG Key
-    client_df = client_df.copy()
-    standard_df = standard_df.copy()
+    only_in_std = sorted(list(std_set - client_set))
+    only_in_client = sorted(list(client_set - std_set))
 
-    client_df = normalize_key(client_df)
-    standard_df = normalize_key(standard_df)
+    # Row-level detailed diff
+    diff_rows = []
 
-    # Identify SG sets
-    client_sg = set(client_df[SG_KEY])
-    standard_sg = set(standard_df[SG_KEY])
+    common = std_set.intersection(client_set)
 
-    # Determine categories
-    client_only = client_sg - standard_sg
-    standard_only = standard_sg - client_sg
-    in_both = client_sg & standard_sg
+    for sg in common:
+        std_row = std_df[std_df["SG Name"] == sg].iloc[0]
+        client_row = client_df[client_df["SG Name"] == sg].iloc[0]
 
-    # Differences inside SG
-    difference_rows = []
-
-    permission_columns = [c for c in client_df.columns if c != SG_KEY]
-
-    for sg in in_both:
-        c_row = client_df[client_df[SG_KEY] == sg].iloc[0]
-        s_row = standard_df[standard_df[SG_KEY] == sg].iloc[0]
-
-        for col in permission_columns:
-            c_val = c_row[col]
-            s_val = s_row[col]
-
-            if pd.isna(c_val) and pd.isna(s_val):
+        for col in std_df.columns:
+            if col == "SG Name":
                 continue
 
-            if str(c_val) != str(s_val):
-                difference_rows.append({
-                    SG_KEY: sg,
-                    "Permission": col,
-                    "Client Value": c_val,
-                    "Standard Value": s_val
+            if str(std_row[col]) != str(client_row[col]):
+                diff_rows.append({
+                    "SG Name": sg,
+                    "Column": col,
+                    "Standard Value": std_row[col],
+                    "Client Value": client_row[col]
                 })
 
-    client_only_list = sorted(list(client_only))
-    standard_only_list = sorted(list(standard_only))
-    differences_df = pd.DataFrame(difference_rows)
+    diff_table = pd.DataFrame(diff_rows)
 
-    return client_only_list, standard_only_list, differences_df
+    return only_in_std, only_in_client, diff_table
