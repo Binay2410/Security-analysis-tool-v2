@@ -1,18 +1,27 @@
-
 import pandas as pd
-from itertools import combinations
+from difflib import SequenceMatcher
 
-def sg_similarity(a, b):
-    return 0.95 if a[0] != b[0] else 1.0
+def compute_similarity(df, threshold=0.60):
+    """Find SGs with similar descriptions or names."""
+    results = []
 
-def compute_similarity_summary(df, history):
-    return pd.DataFrame({"Duplicate Pairs": [3]})
+    df = df.fillna("")
 
-def compute_similarity_report(df, history):
-    sgs = df.iloc[:,0].dropna().tolist()
-    rows=[]
-    for a,b in combinations(sgs,2):
-        score=sg_similarity((a,), (b,))
-        if score>=0.90:
-            rows.append([a,b,score])
-    return pd.DataFrame(rows, columns=["SG1","SG2","Score"])
+    for i in range(len(df)):
+        for j in range(i + 1, len(df)):
+            sg1 = df.iloc[i]
+            sg2 = df.iloc[j]
+
+            text1 = f"{sg1['SG Name']} {sg1['Description']}"
+            text2 = f"{sg2['SG Name']} {sg2['Description']}"
+
+            score = SequenceMatcher(None, text1.lower(), text2.lower()).ratio()
+
+            if score >= threshold:
+                results.append({
+                    "SG1": sg1["SG Name"],
+                    "SG2": sg2["SG Name"],
+                    "Similarity Score": round(score, 3)
+                })
+
+    return pd.DataFrame(results)
