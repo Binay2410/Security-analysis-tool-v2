@@ -1,18 +1,26 @@
-
 import streamlit as st
 import pandas as pd
-from utils.comparator import generate_difference_report
+from utils.comparator import compute_differences
 
-st.title("Difference Report")
+st.title("📘 Difference Report")
 
-st.session_state.setdefault("client_df", None)
-st.session_state.setdefault("std_df", None)
+if "client_file" not in st.session_state:
+    st.error("❌ Please upload a client file from the main page.")
+    st.stop()
 
-if st.session_state.client_df is None:
-    st.error("Please upload a client file on the main page.")
+std_df = pd.read_excel("standard_data.xlsx")
+client_df = pd.read_excel(st.session_state["client_file"])
+
+only_in_std, only_in_client, diff_table = compute_differences(std_df, client_df)
+
+st.subheader("🔷 Missing in Client (Standard Only)")
+st.dataframe(pd.DataFrame({"SG Name": only_in_std}))
+
+st.subheader("🔶 Present Only in Client")
+st.dataframe(pd.DataFrame({"SG Name": only_in_client}))
+
+st.subheader("🟰 Row-Level Differences")
+if diff_table.empty:
+    st.info("✔ No row-level differences found.")
 else:
-    df = generate_difference_report(
-        st.session_state.client_df,
-        st.session_state.std_df
-    )
-    st.dataframe(df)
+    st.dataframe(diff_table)
