@@ -3,9 +3,9 @@ import pandas as pd
 def compute_differences(std_df: pd.DataFrame, client_df: pd.DataFrame):
     """
     Computes:
-    - SGs missing in client
-    - SGs only in client
-    - Detailed differences
+      - SGs missing in client
+      - SGs only in client
+      - Detailed differences per column
     """
 
     std_set = set(std_df["SG Name"])
@@ -16,7 +16,6 @@ def compute_differences(std_df: pd.DataFrame, client_df: pd.DataFrame):
 
     # Row-level detailed diff
     diff_rows = []
-
     common = std_set.intersection(client_set)
 
     for sg in common:
@@ -27,12 +26,15 @@ def compute_differences(std_df: pd.DataFrame, client_df: pd.DataFrame):
             if col == "SG Name":
                 continue
 
-            if str(std_row[col]) != str(client_row[col]):
+            std_val = "" if pd.isna(std_row[col]) else str(std_row[col])
+            client_val = "" if pd.isna(client_row[col]) else str(client_row[col])
+
+            if std_val != client_val:
                 diff_rows.append({
                     "SG Name": sg,
                     "Column": col,
-                    "Standard Value": std_row[col],
-                    "Client Value": client_row[col]
+                    "Standard Value": std_val,
+                    "Client Value": client_val
                 })
 
     diff_table = pd.DataFrame(diff_rows)
