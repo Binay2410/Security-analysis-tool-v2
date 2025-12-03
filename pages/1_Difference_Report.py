@@ -108,6 +108,31 @@ diff_table = diff_table[
 # -----------------------------
 # Render using HTML (Styler)
 # -----------------------------
-styled_df = diff_table.style.format(escape=False)
+# -----------------------------
+# Render table manually in HTML to avoid Styler errors
+# -----------------------------
 
-st.write(styled_df.to_html(), unsafe_allow_html=True)
+def render_html_table(df: pd.DataFrame) -> str:
+    html = "<table style='width:100%; border-collapse: collapse;'>"
+
+    # Header
+    html += "<tr>"
+    for col in df.columns:
+        html += f"<th style='border:1px solid #ccc; padding:6px; background:#f0f0f0'>{col}</th>"
+    html += "</tr>"
+
+    # Rows
+    for _, row in df.iterrows():
+        html += "<tr>"
+        for col in df.columns:
+            val = row[col] if pd.notna(row[col]) else ""
+            html += f"<td style='border:1px solid #ccc; padding:6px; vertical-align: top'>{val}</td>"
+        html += "</tr>"
+
+    html += "</table>"
+    return html
+
+
+# Now render the HTML table
+html_table = render_html_table(diff_table)
+st.write(html_table, unsafe_allow_html=True)
