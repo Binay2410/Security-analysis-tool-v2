@@ -1,8 +1,7 @@
 import streamlit as st
 import pandas as pd
-from utils.comparator import run_full_comparison
-from utils.similarity import compute_similarity_summary
-from utils.persistence import load_history
+from utils.comparator import compute_differences
+from utils.similarity import compute_similarity
 
 st.set_page_config(
     page_title="Security Group Analysis",
@@ -10,91 +9,90 @@ st.set_page_config(
 )
 
 st.title("🔐 Security Group Analysis Tool")
-st.write("Upload the client file below and view all analysis reports using the sidebar navigation.")
+st.write("Upload the client file below and view all analysis reports using the sidebar menu.")
 
-# -------------------------------
-# Load Standard File (must exist in repo)
-# -------------------------------
+# ---------------------------------------------------
+# LOAD STANDARD DATA FILE
+# ---------------------------------------------------
 STANDARD_FILE = "standard_data.xlsx"
 
 try:
     std_df = pd.read_excel(STANDARD_FILE)
 except FileNotFoundError:
-    st.error(f"❌ Missing required file: `{STANDARD_FILE}`.\n\nUpload it to your GitHub repository root.")
+    st.error(f"❌ Missing required file: `{STANDARD_FILE}`.\n\nPlease ensure it exists in your repository root.")
     st.stop()
 
-# -------------------------------
-# File Upload Section
-# -------------------------------
+# ---------------------------------------------------
+# FILE UPLOAD SECTION
+# ---------------------------------------------------
 uploaded = st.file_uploader("📤 Upload Client Access Excel", type=["xlsx"])
 
 if uploaded:
     st.session_state["client_file"] = uploaded
 
-# -------------------------------
-# If no client file yet — show instructions
-# -------------------------------
+# ---------------------------------------------------
+# IF NO CLIENT FILE — STOP & SHOW MESSAGE
+# ---------------------------------------------------
 if "client_file" not in st.session_state:
-    st.info("⬆️ Please upload the client Excel file to begin.")
+    st.info("⬆️ Please upload a client Excel file to begin.")
     st.stop()
 
-# -------------------------------
-# Client DF Loaded Successfully
-# -------------------------------
-client_df = pd.read_excel(st.session_state["client_file"])
+# ---------------------------------------------------
+# READ CLIENT FILE
+# ---------------------------------------------------
+try:
+    client_df = pd.read_excel(st.session_state["client_file"])
+except Exception as e:
+    st.error(f"❌ Error reading uploaded file: {e}")
+    st.stop()
 
 st.success("✅ Client file uploaded successfully!")
 
-# -------------------------------
-# PERSISTENCE FILES (Optional future feature)
-# -------------------------------
-accepted_risk_df, update_workday_df = load_persistent_files()
-
-# -------------------------------
-# RUN DIFFERENCE ENGINE
-# -------------------------------
+# ---------------------------------------------------
+# RUN DIFFERENCE ANALYSIS
+# ---------------------------------------------------
 only_in_std, only_in_client, diff_table = compute_differences(std_df, client_df)
 
-# -------------------------------
-# RUN SIMILARITY ENGINE
-# -------------------------------
+# ---------------------------------------------------
+# RUN SIMILARITY ANALYSIS
+# ---------------------------------------------------
 similarity_results = compute_similarity(client_df)
 
-# -------------------------------
-# Display Summary Tiles
-# -------------------------------
+# ---------------------------------------------------
+# SUMMARY METRICS
+# ---------------------------------------------------
 st.subheader("📊 Summary Overview")
 
 col1, col2, col3 = st.columns(3)
 
 with col1:
     st.metric(
-        label="🔹 Security Groups missing in Client (Standard Only)",
+        label="🔹 Missing in Client (Standard Only)",
         value=len(only_in_std)
     )
 
 with col2:
     st.metric(
-        label="🔸 Custom Security Groups (Client Only)",
+        label="🔸 Client Only Groups (Custom)",
         value=len(only_in_client)
     )
 
 with col3:
     st.metric(
-        label="🟰 SGs with Row-Level Differences",
+        label="🟰 Differences in Row-Level Data",
         value=len(diff_table)
     )
 
 st.markdown("---")
 
-# -------------------------------
-# Preview of Differences Table (Top 10)
-# -------------------------------
-st.subheader("🔍 Quick Preview of Differences")
+# ---------------------------------------------------
+# QUICK PREVIEW OF DIFFERENCES
+# ---------------------------------------------------
+st.subheader("🔍 Differences Preview (Top 10)")
+
 if len(diff_table) == 0:
     st.info("✔ No row-level differences detected.")
 else:
     st.dataframe(diff_table.head(10))
 
-st.markdown("➡️ Use the sidebar to open **Difference Report**, **Similarity Analysis**, or **Detail View** pages.")
-
+st.markdown("➡️ Use the sidebar to access full **Difference Report**, **Similarity Analysis**, or **SG Detail Views**.")
