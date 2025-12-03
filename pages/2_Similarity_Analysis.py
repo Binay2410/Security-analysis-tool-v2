@@ -1,16 +1,20 @@
-
 import streamlit as st
 import pandas as pd
-from utils.similarity import compute_similarity_report
-from utils.persistence import load_history
+from utils.similarity import compute_similarity
 
-st.title("Security Group Similarity Analysis")
+st.title("🔍 Similarity Analysis")
 
-st.session_state.setdefault("client_df", None)
+if "client_file" not in st.session_state:
+    st.error("❌ Please upload a client file from the main page.")
+    st.stop()
 
-if st.session_state.client_df is None:
-    st.error("Upload a file on the main page first.")
+client_df = pd.read_excel(st.session_state["client_file"])
+
+st.write("Processing similarity comparison...")
+
+results = compute_similarity(client_df)
+
+if results.empty:
+    st.info("✔ No similar SGs detected.")
 else:
-    _, _, dup_hist = load_history()
-    sim = compute_similarity_report(st.session_state.client_df, dup_hist)
-    st.dataframe(sim)
+    st.dataframe(results)
