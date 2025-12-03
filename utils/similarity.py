@@ -1,27 +1,46 @@
 import pandas as pd
-from difflib import SequenceMatcher
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
-def compute_similarity(df, threshold=0.60):
-    """Find SGs with similar descriptions or names."""
+SG_COL = "Domains granted to Security Group"
+
+def compute_similarity(df):
+    if SG_COL not in df.columns:
+        raise KeyError(f"Missing required column: {SG_COL}")
+
+    permission_columns = [c for c in df.columns if c != SG_COL]
+
+    # Build text per SG by concatenating all permission values
+    sg_texts = []
+    sg_names = list(df[SG_COL])
+
+    for _, row in df.iterrows():
+        combined = []
+        for col in permission_columns:
+            cell = row[col]
+            if pd.notna(cell):
+                combined.append(str(cell))
+        sg_texts.append(" | ".join(combined))
+
+    # TF-IDF vectorization
+    vectorizer = TfidfVectorizer()
+    tfidf_matrix = vectorizer.fit_transform(sg_texts)
+
+    # Cosine similarity matrix
+    similarity_matrix = cosine_similarity(tfidf_matrix)
+
     results = []
+    n = len(sg_names)
 
-    df = df.fillna("")
+    for i in range(n):
+        for j in range(i + 1, n):
+            score = similarity_matrix[i][j]
 
-    for i in range(len(df)):
-        for j in range(i + 1, len(df)):
-            sg1 = df.iloc[i]
-            sg2 = df.iloc[j]
-
-            text1 = f"{sg1['SG Name']} {sg1['Description']}"
-            text2 = f"{sg2['SG Name']} {sg2['Description']}"
-
-            score = SequenceMatcher(None, text1.lower(), text2.lower()).ratio()
-
-            if score >= threshold:
+            if score >= 0.35:  # threshold
                 results.append({
-                    "SG1": sg1["SG Name"],
-                    "SG2": sg2["SG Name"],
-                    "Similarity Score": round(score, 3)
+                    "SG1": sg_names[i],
+                    "SG2": sg_names[j],
+                    "Similarity Score": round(float(score), 4)
                 })
 
     return pd.DataFrame(results)
