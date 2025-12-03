@@ -1,36 +1,65 @@
 import streamlit as st
 import pandas as pd
 
-st.title("Workday Security Analysis Tool")
+from utils.comparator import compute_differences
+from utils.similarity import compute_similarity
 
-# Load Standard data ONCE
-if "standard_df" not in st.session_state:
-    st.session_state.standard_df = pd.read_excel("data/standard_workday_security.xlsx")
+st.set_page_config(
+    page_title="Security Group Analysis Tool",
+    layout="wide"
+)
 
-standard_df = st.session_state.standard_df
+st.title("🔐 Security Group Analysis Tool")
 
-uploaded_file = st.file_uploader("Upload Client Security Groups Excel", type=["xlsx"])
+# Load Standard File
+STANDARD_FILE = "standard_data.xlsx"
 
-if uploaded_file:
-    st.session_state.client_df = pd.read_excel(uploaded_file)
+try:
+    std_df = pd.read_excel(STANDARD_FILE)
+except Exception as e:
+    st.error(f"❌ Could not load `{STANDARD_FILE}`: {e}")
+    st.stop()
 
-if "client_df" in st.session_state:
-    client_df = st.session_state.client_df
+# Upload Client File
+uploaded = st.file_uploader("📤 Upload Client SG Excel File", type=["xlsx"])
 
-    st.success("File uploaded successfully.")
+if uploaded:
+    st.session_state["client_file"] = uploaded
 
-    # Normalize SG key
-    sg_column = "Domains granted to Security Group"
-    client_df[sg_column] = client_df[sg_column].astype(str).str.strip().str.lower()
-    standard_df[sg_column] = standard_df[sg_column].astype(str).str.strip().str.lower()
+if "client_file" not in st.session_state:
+    st.info("⬆️ Please upload a client file to continue.")
+    st.stop()
 
-    # Summary counts
-    client_set = set(client_df[sg_column])
-    standard_set = set(standard_df[sg_column])
+# Load Client File
+try:
+    client_df = pd.read_excel(st.session_state["client_file"])
+except Exception as e:
+    st.error(f"❌ Failed to read uploaded file: {e}")
+    st.stop()
 
-    st.metric("Client SG Count", len(client_set))
-    st.metric("Standard SG Count", len(standard_set))
-    st.metric("Client Only SGs", len(client_set - standard_set))
-    st.metric("Missing in Client (Standard Only)", len(standard_set - client_set))
+st.success("✅ Client file uploaded!")
+
+# Compute Differences
+only_in_std, only_in_client, diff_table = compute_differences(std_df, client_df)
+
+# Compute Similarity
+similarity_results = compute_similarity(client_df)
+
+# Summary Metrics
+st.subheader("📊 Summary")
+
+c1, c2, c3 = st.columns(3)
+
+c1.metric("Missing in Client", len(only_in_std))
+c2.metric("Client Only SGs", len(only_in_client))
+c3.metric("Row-Level Differences", len(diff_table))
+
+st.markdown("---")
+
+st.subheader("🔍 Preview Differences (Top 10)")
+if diff_table.empty:
+    st.info("✔ No differences found.")
 else:
-    st.info("Upload an Excel file to begin.")
+    st.dataframe(diff_table.head(10))
+
+st.markdown("➡️ Use the sidebar pages for full analysis.")
