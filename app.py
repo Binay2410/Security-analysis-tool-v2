@@ -45,12 +45,20 @@ if "client_df" not in st.session_state:
 client_df = st.session_state["client_df"]
 
 # ---------- Lightweight summary using differences only ----------
-@st.cache_data(show_spinner=False)
-def get_diff_summary(std_df: pd.DataFrame, client_df: pd.DataFrame):
-    only_in_std, only_in_client, diff_table = compute_differences(std_df, client_df)
-    return only_in_std, only_in_client, diff_table
+# ---------- Compute differences ONCE and cache in session_state ----------
+if "diff_results" not in st.session_state:
+    with st.spinner("Computing differences..."):
+        only_in_std, only_in_client, diff_table = compute_differences(std_df, client_df)
+        st.session_state["diff_results"] = {
+            "only_in_std": only_in_std,
+            "only_in_client": only_in_client,
+            "diff_table": diff_table
+        }
+else:
+    only_in_std = st.session_state["diff_results"]["only_in_std"]
+    only_in_client = st.session_state["diff_results"]["only_in_client"]
+    diff_table = st.session_state["diff_results"]["diff_table"]
 
-only_in_std, only_in_client, diff_table = get_diff_summary(std_df, client_df)
 
 st.subheader("📊 Summary Overview")
 
@@ -112,6 +120,54 @@ def build_sg_diff_summary(diff_df):
 
 
 # -----------------------------
+# Build Top 10 SGs by total difference count
+# -----------------------------
+def count_difference_items(std_val, client_val):
+    """Return total number of missing + extra items."""
+    std_items = {
+        line.strip()
+        for line in str(std_val).splitlines()
+        if str(line).strip() != ""
+    }
+
+    client_items = {
+        line.strip()
+        for line in str(client_val).splitlines()
+        if str(line).strip() != ""
+    }
+
+    missing = std_items - client_items
+    extra = client_items - std_items
+
+    return len(missing) + len(extra)
+
+
+def build_sg_diff_summary(diff_df):
+    """Aggregate all differences per SG and return ranked summary."""
+    summary = {}
+
+    for _, row in diff_df.iterrows():
+        sg = row["SG Name"]
+        std_val = row["Standard Value"]
+        client_val = row["Client Value"]
+
+        diff_count = count_difference_items(std_val, client_val)
+
+        if sg not in summary:
+            summary[sg] = 0
+        summary[sg] += diff_count
+
+    summary_df = (
+        pd.DataFrame(
+            [{"Security Group": sg, "Total Differences": c} for sg, c in summary.items()]
+        )
+        .sort_values("Total Differences", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    return summary_df
+
+# -----------------------------
 # Display the real Top 10 preview
 # -----------------------------
 st.subheader("🔍 Preview – Top 10 Security Groups With Maximum Differences")
@@ -121,6 +177,3 @@ if diff_table.empty:
 else:
     top10 = build_sg_diff_summary(diff_table).head(10)
     st.dataframe(top10)
-
-
-st.markdown("➡️ Use the sidebar pages for full Difference Report and Similarity Analysis.")
