@@ -3,62 +3,53 @@ import pandas as pd
 
 st.title("📘 Difference Report")
 
-# Ensure data exists
-if "client_df" not in st.session_state or "std_df" not in st.session_state:
+# ------------------------------------------------------------------------------
+# ✔ 1. VALIDATE DATA — MUST read from session_state only
+# ------------------------------------------------------------------------------
+if (
+    "diff_results" not in st.session_state or
+    "client_df" not in st.session_state or
+    "std_df" not in st.session_state
+):
     st.error("Please upload a client file on the main page.")
     st.stop()
 
-client_df = st.session_state["client_df"]
-std_df = st.session_state["std_df"]
+only_in_std = st.session_state["diff_results"]["only_in_std"]
+only_in_client = st.session_state["diff_results"]["only_in_client"]
+diff_table = st.session_state["diff_results"]["diff_table"]
 
-# -----------------------------
-# Load diff results (cached)
-# -----------------------------
-@st.cache_data(show_spinner=True)
-def get_differences(std_df, client_df):
-    from utils.comparator import compute_differences
-    return compute_differences(std_df, client_df)
-
-only_in_std, only_in_client, diff_table = get_differences(std_df, client_df)
-
-# SAFETY: If diff_table is None or not a DataFrame
-if diff_table is None or not isinstance(diff_table, pd.DataFrame):
-    st.error("❌ Failed to compute differences.")
-    st.stop()
-
-# -----------------------------
-# Section headings
-# -----------------------------
+# ------------------------------------------------------------------------------
+# ✔ 2. Show “Missing in Client”
+# ------------------------------------------------------------------------------
 st.subheader("❌ Security Group(s) does not exist in tenant")
 st.dataframe({"Security Group": only_in_std})
 
+# ------------------------------------------------------------------------------
+# ✔ 3. Show “Client Only”
+# ------------------------------------------------------------------------------
 st.subheader("⚠️ Custom Security Group(s)")
 st.dataframe({"Security Group": only_in_client})
 
+# ------------------------------------------------------------------------------
+# ✔ 4. Detailed Row-Level Differences
+# ------------------------------------------------------------------------------
 st.subheader("🟰 Detailed Row-Level Differences")
 
 if diff_table.empty:
-    st.info("✔ No row-level differences found.")
+    st.info("✔ No differences found.")
     st.stop()
 
-# -----------------------------
-# Rename columns
-# -----------------------------
-required_cols = {"SG Name", "Column", "Standard Value", "Client Value"}
-missing_cols = required_cols - set(diff_table.columns)
-
-if missing_cols:
-    st.error(f"❌ Missing columns in diff_table: {missing_cols}")
-    st.stop()
-
+# ------------------------------------------------------------------------------
+# ✔ 5. Rename Columns
+# ------------------------------------------------------------------------------
 diff_table = diff_table.rename(columns={
     "SG Name": "Security Group",
     "Column": "Access Type"
 })
 
-# -----------------------------
-# Helper: extract difference items with formatting
-# -----------------------------
+# ------------------------------------------------------------------------------
+# ✔ 6. Format Missing / Extra Items
+# ------------------------------------------------------------------------------
 def extract_diff_items_formatted(std_val: str, client_val: str) -> str:
 
     std_items = {
@@ -90,28 +81,22 @@ def extract_diff_items_formatted(std_val: str, client_val: str) -> str:
 
     return "<br>".join(formatted)
 
-# -----------------------------
-# Build Difference Items column
-# -----------------------------
+
 diff_table["Difference Items"] = diff_table.apply(
     lambda row: extract_diff_items_formatted(row["Standard Value"], row["Client Value"]),
     axis=1
 )
 
-# -----------------------------
-# Reorder columns
-# -----------------------------
+# ------------------------------------------------------------------------------
+# ✔ 7. Order Columns
+# ------------------------------------------------------------------------------
 diff_table = diff_table[
     ["Security Group", "Access Type", "Standard Value", "Client Value", "Difference Items"]
 ]
 
-# -----------------------------
-# Render using HTML (Styler)
-# -----------------------------
-# -----------------------------
-# Render table manually in HTML to avoid Styler errors
-# -----------------------------
-
+# ------------------------------------------------------------------------------
+# ✔ 8. Render HTML Table (Styler removed)
+# ------------------------------------------------------------------------------
 def render_html_table(df: pd.DataFrame) -> str:
     html = "<table style='width:100%; border-collapse: collapse;'>"
 
@@ -132,7 +117,5 @@ def render_html_table(df: pd.DataFrame) -> str:
     html += "</table>"
     return html
 
-
-# Now render the HTML table
 html_table = render_html_table(diff_table)
 st.write(html_table, unsafe_allow_html=True)
