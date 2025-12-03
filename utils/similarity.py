@@ -1,34 +1,57 @@
 import pandas as pd
-from difflib import SequenceMatcher
+from itertools import combinations
 
-def compute_similarity(df: pd.DataFrame):
+def _row_items(row: pd.Series):
     """
-    Compares SGs against each other inside the same dataset.
-    Useful for detecting SGs that are almost identical.
+    Build a set of permission 'items' from all permission columns in a row.
+    Split on newlines, strip, ignore empty.
+    """
+    items = set()
+    for col, val in row.items():
+        if col == "SG Name":
+            continue
+        if pd.isna(val):
+            continue
+        # each cell may contain multiple entries separated by newlines
+        for part in str(val).splitlines():
+            part = part.strip()
+            if part:
+                items.add(part)
+    return items
+
+def compute_similarity(df: pd.DataFrame, threshold: float = 0.90) -> pd.DataFrame:
+    """
+    Jaccard similarity between SGs based on permission items.
+    Only returns pairs with similarity >= threshold.
     """
 
-    results = []
+    df = df.copy()
+    sg_names = df["SG Name"].tolist()
+    item_sets = [_row_items(row) for _, row in df.iterrows()]
 
-    sg_list = df["SG Name"].tolist()
+    rows = []
+    n = len(sg_names)
 
-    for i in range(len(sg_list)):
-        for j in range(i + 1, len(sg_list)):
-            sg1 = sg_list[i]
-            sg2 = sg_list[j]
+    for i, j in combinations(range(n), 2):
+        a = item_sets[i]
+        b = item_sets[j]
 
-            row1 = df[df["SG Name"] == sg1].iloc[0]
-            row2 = df[df["SG Name"] == sg2].iloc[0]
+        if not a and not b:
+            continue
 
-            # Compare entire row except SG Name
-            text1 = " ".join(row1.astype(str).tolist())
-            text2 = " ".join(row2.astype(str).tolist())
+        inter = len(a & b)
+        union = len(a | b)
 
-            similarity = SequenceMatcher(None, text1, text2).ratio()
+        if union == 0:
+            continue
 
-            results.append({
-                "SG 1": sg1,
-                "SG 2": sg2,
-                "Similarity Score": round(similarity * 100, 2)
+        sim = inter / union
+
+        if sim >= threshold:
+            rows.append({
+                "SG 1": sg_names[i],
+                "SG 2": sg_names[j],
+                "Similarity": round(sim * 100, 2)
             })
 
-    return pd.DataFrame(results)
+    return pd.DataFrame(rows)
