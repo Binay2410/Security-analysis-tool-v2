@@ -14,21 +14,26 @@ st.title("🔐 Security Group Analysis Tool")
 
 STANDARD_FILE = "standard_data.xlsx"
 
-# Load Standard Data
+# ----------------------------
+# Load and normalize Standard Data
+# ----------------------------
 try:
-    std_df = pd.read_excel(STANDARD_FILE)
-    std_df = normalize_dataframe(std_df)
+    raw_std_df = pd.read_excel(STANDARD_FILE)
+    std_df = normalize_dataframe(raw_std_df)     # ✅ FIX: Normalize standard file
+    st.session_state["std_df"] = std_df
 except Exception as e:
     st.error(f"❌ Could not load `{STANDARD_FILE}`: {e}")
     st.stop()
 
+# ----------------------------
 # Upload Client File
+# ----------------------------
 uploaded = st.file_uploader("📤 Upload Client SG Excel File", type=["xlsx"])
 
 if uploaded:
     try:
         raw_client_df = pd.read_excel(uploaded)
-        client_df = normalize_dataframe(raw_client_df)
+        client_df = normalize_dataframe(raw_client_df)   # ✅ FIX: Normalize client file
         st.session_state["client_df"] = client_df
         st.success("✅ Client file loaded successfully!")
     except Exception as e:
@@ -41,11 +46,19 @@ if "client_df" not in st.session_state:
 
 client_df = st.session_state["client_df"]
 
-# Compute differences
+# ----------------------------
+# Compute Differences
+# ----------------------------
 only_in_std, only_in_client, diff_table = compute_differences(std_df, client_df)
+
+# ----------------------------
+# Compute Similarity
+# ----------------------------
 similarity_results = compute_similarity(client_df)
 
+# ----------------------------
 # Summary
+# ----------------------------
 st.subheader("📊 Summary Overview")
 
 c1, c2, c3 = st.columns(3)
