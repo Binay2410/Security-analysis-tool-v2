@@ -15,17 +15,12 @@ EXPECTED_COLUMNS = [
 
 def normalize_dataframe(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Ensures consistent column names and renames SG column to SG Name.
+    Ensure expected columns exist and rename SG column to 'SG Name'.
     """
-
-    # Ensure all expected columns exist
     missing = [c for c in EXPECTED_COLUMNS if c not in df.columns]
     if missing:
-        raise KeyError(f"Missing expected columns: {missing}")
+        raise KeyError(f"Missing expected columns: {missing}\nGot: {list(df.columns)}")
 
     df = df.copy()
-
-    # Rename first column to SG Name
     df.rename(columns={"Domains granted to Security Group": "SG Name"}, inplace=True)
-
     return df
