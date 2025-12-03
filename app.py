@@ -61,10 +61,66 @@ c3.metric("Row-Level Differences", len(diff_table))
 
 st.markdown("---")
 
-st.subheader("🔍 Preview Differences (Top 10)")
+# -----------------------------
+# Build Top 10 SGs by total difference count
+# -----------------------------
+def count_difference_items(std_val, client_val):
+    """Return total number of missing + extra items."""
+    std_items = {
+        line.strip()
+        for line in str(std_val).splitlines()
+        if str(line).strip() != ""
+    }
+
+    client_items = {
+        line.strip()
+        for line in str(client_val).splitlines()
+        if str(line).strip() != ""
+    }
+
+    missing = std_items - client_items
+    extra = client_items - std_items
+
+    return len(missing) + len(extra)
+
+
+def build_sg_diff_summary(diff_df):
+    """Aggregate all differences per SG and return ranked summary."""
+    summary = {}
+
+    for _, row in diff_df.iterrows():
+        sg = row["SG Name"]
+        std_val = row["Standard Value"]
+        client_val = row["Client Value"]
+
+        diff_count = count_difference_items(std_val, client_val)
+
+        if sg not in summary:
+            summary[sg] = 0
+        summary[sg] += diff_count
+
+    # Convert to DataFrame
+    summary_df = (
+        pd.DataFrame(
+            [{"Security Group": sg, "Total Differences": c} for sg, c in summary.items()]
+        )
+        .sort_values("Total Differences", ascending=False)
+        .reset_index(drop=True)
+    )
+
+    return summary_df
+
+
+# -----------------------------
+# Display the real Top 10 preview
+# -----------------------------
+st.subheader("🔍 Preview – Top 10 Security Groups With Maximum Differences")
+
 if diff_table.empty:
     st.info("✔ No differences found.")
 else:
-    st.dataframe(diff_table.head(10))
+    top10 = build_sg_diff_summary(diff_table).head(10)
+    st.dataframe(top10)
+
 
 st.markdown("➡️ Use the sidebar pages for full Difference Report and Similarity Analysis.")
