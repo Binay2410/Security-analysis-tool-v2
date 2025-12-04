@@ -84,7 +84,7 @@ st.markdown("""
     border:1px solid #E0E0E0;
     margin-bottom:15px;"
 >
-<h3 style="margin:0 0 15px 0; color:#333;">📤 Upload Client Security Group File</h3>
+<h3 style="margin:0 0 15px 0; color:#333;">📤 Upload Client Security File</h3>
 """, unsafe_allow_html=True)
 
 uploaded = st.file_uploader("", type=["xlsx"])
