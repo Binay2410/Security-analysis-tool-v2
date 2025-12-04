@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import html
 
 # ------------------------------------------------------------------------------
 # PAGE HEADER
@@ -27,6 +28,9 @@ if (
 only_in_std = st.session_state["diff_results"]["only_in_std"]
 only_in_client = st.session_state["diff_results"]["only_in_client"]
 diff_table = st.session_state["diff_results"]["diff_table"]
+
+# Work on a copy so we don't mutate the cached object in session_state
+diff_table = diff_table.copy()
 
 # ------------------------------------------------------------------------------
 # MISSING IN CLIENT (Styled)
@@ -76,7 +80,7 @@ if diff_table.empty:
     st.stop()
 
 # ------------------------------------------------------------------------------
-# RENAME COLUMNS
+# RENAME COLUMNS (SG Name → Security Group, Column → Access Type)
 # ------------------------------------------------------------------------------
 diff_table = diff_table.rename(columns={
     "SG Name": "Security Group",
@@ -87,7 +91,6 @@ diff_table = diff_table.rename(columns={
 # FORMAT DIFFERENCES (Missing = Red, Extra = Black)
 # ------------------------------------------------------------------------------
 def extract_diff_items_formatted(std_val: str, client_val: str) -> str:
-
     std_items = {
         line.strip()
         for line in str(std_val).splitlines()
@@ -107,15 +110,16 @@ def extract_diff_items_formatted(std_val: str, client_val: str) -> str:
 
     for item in missing_items:
         formatted.append(
-            f"<div><span style='color:red; font-weight:bold;'>Missing:</span> {item}</div>"
+            f"<div><span style='color:red; font-weight:bold;'>Missing:</span> {html.escape(item)}</div>"
         )
 
     for item in extra_items:
         formatted.append(
-            f"<div><span style='color:black;'>Extra:</span> {item}</div>"
+            f"<div><span style='color:black;'>Extra:</span> {html.escape(item)}</div>"
         )
 
     return "".join(formatted)
+
 
 diff_table["Difference Items"] = diff_table.apply(
     lambda row: extract_diff_items_formatted(row["Standard Value"], row["Client Value"]),
@@ -132,9 +136,10 @@ diff_table = diff_table[
 # ------------------------------------------------------------------------------
 # RENDER HTML TABLE CLEANLY
 # ------------------------------------------------------------------------------
-import html
-
 def render_html_table(df: pd.DataFrame) -> str:
+    if df.empty:
+        return "<p style='color:#777;'>No differences found.</p>"
+
     html_str = """
     <table style='width:100%; border-collapse: collapse; font-size:14px;'>
     """
@@ -144,13 +149,12 @@ def render_html_table(df: pd.DataFrame) -> str:
     for col in df.columns:
         html_str += f"""
         <th style="
-            border:1px solid #DDD; 
-            padding:8px; 
-            background:#F0F4FF; 
+            border:1px solid #DDD;
+            padding:8px;
+            background:#F0F4FF;
             font-weight:600;
-            color:#2A2A2A;">
-            {html.escape(col)}
-        </th>
+            color:#2A2A2A;"
+        >{html.escape(str(col))}</th>
         """
     html_str += "</tr>"
 
@@ -159,22 +163,28 @@ def render_html_table(df: pd.DataFrame) -> str:
         html_str += "<tr>"
         for col in df.columns:
             val = row[col] if pd.notna(row[col]) else ""
+            val = "" if val is None else str(val)
 
-            # For everything EXCEPT Difference Items → escape HTML
+            # Escape non-HTML columns
             if col == "Difference Items":
-                safe_val = val
+                safe_val = val  # already contains HTML tags for Missing/Extra
             else:
-                safe_val = html.escape(str(val))
+                safe_val = html.escape(val)
 
             html_str += f"""
             <td style="
-                border:1px solid #EEE; 
-                padding:8px; 
-                vertical-align:top;">
-                {safe_val}
-            </td>
+                border:1px solid #EEE;
+                padding:8px;
+                vertical-align: top;"
+            >{safe_val}</td>
             """
         html_str += "</tr>"
 
     html_str += "</table>"
     return html_str
+
+# ------------------------------------------------------------------------------
+# WRITE TABLE TO PAGE
+# ------------------------------------------------------------------------------
+html_table = render_html_table(diff_table)
+st.write(html_table, unsafe_allow_html=True)
