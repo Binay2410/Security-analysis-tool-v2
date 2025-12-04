@@ -10,15 +10,20 @@ st.set_page_config(
 )
 
 st.markdown("""
-<div style="padding: 20px 10px; border-bottom: 1px solid #EEE;">
-    <h1 style="color:#2A61FF; font-size: 32px; margin: 0;">
-        🔐 Security Group Analysis Tool
-    </h1>
-    <p style="color:#555; margin-top: 4px; font-size:14px;">
-        Enterprise-grade comparison, insights & AI-driven analysis
-    </p>
-</div>
+<div style="
+    background:#F5F7FB; 
+    padding:20px;
+    border-radius:10px;
+    border:1px solid #E0E0E0;
+    margin-top:20px;
+    margin-bottom:20px;">
+<h3 style="margin:0 0 15px 0; color:#333;">📤 Upload Client Security Group File</h3>
 """, unsafe_allow_html=True)
+
+uploaded = st.file_uploader("", type=["xlsx"])
+
+st.markdown("</div>", unsafe_allow_html=True)
+
 
 
 STANDARD_FILE = "standard_data.xlsx"
