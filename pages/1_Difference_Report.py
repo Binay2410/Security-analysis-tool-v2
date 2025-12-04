@@ -68,7 +68,7 @@ st.markdown("""
 <h3 style="color:#2A61FF;">🟰 Detailed Row-Level Differences</h3>
 <p style="margin-bottom:12px; color:#666;">
 Below are detailed access-level differences for each security group.
-Each row shows the Standard value, Client value, and a list of Missing/Extra items.
+Missing = red, Extra = black.
 </p>
 """, unsafe_allow_html=True)
 
@@ -77,7 +77,7 @@ if diff_table.empty:
     st.stop()
 
 # ------------------------------------------------------------------------------
-# RENAME COLUMNS (final expected names)
+# RENAME COLUMNS
 # ------------------------------------------------------------------------------
 diff_table = diff_table.rename(columns={
     "SG Name": "Security Group",
@@ -85,13 +85,9 @@ diff_table = diff_table.rename(columns={
 })
 
 # ------------------------------------------------------------------------------
-# BUILD PLAIN TEXT DIFFERENCE ITEMS
+# BUILD PLAIN TEXT FOR DIFFERENCE ITEMS
 # ------------------------------------------------------------------------------
-def build_diff_items_text(std_val: str, client_val: str) -> str:
-    """Return multi-line text:
-       Missing: X
-       Extra: Y
-    with all items compared line-by-line."""
+def build_diff_items_list(std_val: str, client_val: str):
     std_items = {
         line.strip() for line in str(std_val).splitlines() if str(line).strip() != ""
     }
@@ -102,28 +98,65 @@ def build_diff_items_text(std_val: str, client_val: str) -> str:
     missing = sorted(list(std_items - client_items))
     extra = sorted(list(client_items - std_items))
 
-    lines = []
+    rows = []
     for item in missing:
-        lines.append(f"Missing: {item}")
+        rows.append(("Missing", item))
     for item in extra:
-        lines.append(f"Extra: {item}")
+        rows.append(("Extra", item))
 
-    return "\n".join(lines)
+    return rows
 
 
-diff_table["Difference Items"] = diff_table.apply(
-    lambda r: build_diff_items_text(r["Standard Value"], r["Client Value"]),
+diff_table["Difference Items Raw"] = diff_table.apply(
+    lambda r: build_diff_items_list(r["Standard Value"], r["Client Value"]),
     axis=1
 )
 
 # ------------------------------------------------------------------------------
-# COLUMN ORDER
+# FLATTEN LIST INTO MULTILINE TEXT FOR DISPLAY
 # ------------------------------------------------------------------------------
-diff_table = diff_table[
-    ["Security Group", "Access Type", "Standard Value", "Client Value", "Difference Items"]
-]
+def diff_text(row):
+    lines = []
+    for typ, item in row:
+        lines.append(f"{typ}: {item}")
+    return "\n".join(lines)
+
+diff_table["Difference Items"] = diff_table["Difference Items Raw"].apply(diff_text)
 
 # ------------------------------------------------------------------------------
-# DISPLAY USING STANDARD STREAMLIT TABLE (NO HTML)
+# APPLY COLOR WITH PANDAS STYLER
 # ------------------------------------------------------------------------------
-st.dataframe(diff_table, use_container_width=True)
+def color_diff(val):
+    """Apply line-by-line coloring for Missing/Extra."""
+    if pd.isna(val):
+        return val
+
+    lines = str(val).split("\n")
+
+    colored = []
+    for line in lines:
+        if line.startswith("Missing:"):
+            colored.append(f"<span style='color:red;font-weight:bold;'>{html.escape(line)}</span>")
+        elif line.startswith("Extra:"):
+            colored.append(f"<span style='color:black;'>{html.escape(line)}</span>")
+        else:
+            colored.append(html.escape(line))
+
+    return "<br>".join(colored)
+
+
+styled_df = diff_table[[
+    "Security Group",
+    "Access Type",
+    "Standard Value",
+    "Client Value",
+    "Difference Items"
+]].style.format({
+    "Difference Items": color_diff
+}, escape="html")
+
+
+# ------------------------------------------------------------------------------
+# DISPLAY STYLED TABLE
+# ------------------------------------------------------------------------------
+st.write(styled_df.to_html(), unsafe_allow_html=True)
