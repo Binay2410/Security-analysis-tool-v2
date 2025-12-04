@@ -6,18 +6,11 @@ from utils.comparator import compute_differences
 from utils.similarity import compute_similarity
 
 # -------------------------------------------------------------------------
-# PAGE CONFIG (rename App → Home in sidebar)
+# PAGE CONFIG
 # -------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Home",
-    page_icon="🏠",
+    page_title="Security Group Analysis Tool",
     layout="wide"
-)
-
-# Sidebar Title
-st.sidebar.markdown(
-    "<h2 style='color:white; font-weight:600;'>🏠 Home</h2>",
-    unsafe_allow_html=True
 )
 
 # -------------------------------------------------------------------------
@@ -53,6 +46,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 uploaded = st.file_uploader("", type=["xlsx"])
+
 st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------------------------------------------------------------
@@ -150,7 +144,7 @@ c3.markdown(f"""
 st.markdown("---")
 
 # -------------------------------------------------------------------------
-# TOP 10 DIFF SUMMARY
+# TOP 10 DIFFERENCES
 # -------------------------------------------------------------------------
 def count_difference_items(std_val, client_val):
     std_items = {x.strip() for x in str(std_val).splitlines() if x.strip()}
