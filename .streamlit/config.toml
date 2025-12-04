@@ -1,7 +1,11 @@
 [theme]
-base="light"
-primaryColor="#2A61FF"
+primaryColor="#2E55A2"
 backgroundColor="#FFFFFF"
 secondaryBackgroundColor="#F5F7FB"
-textColor="#1A1A1A"
+textColor="#000000"
 font="sans serif"
+
+# Sidebar override
+[theme.sidebar]
+backgroundColor="#2E55A2"
+textColor="#FFFFFF"
