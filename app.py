@@ -211,3 +211,30 @@ st.markdown("➡️ Use the sidebar for full Difference Report and Similarity An
 if "similarity_results" not in st.session_state:
     with st.spinner("Computing SG similarity..."):
         st.session_state["similarity_results"] = compute_similarity(client_df)
+
+
+# -------------------------------------------------------------------------
+# FIX SIDEBAR LABEL "app" → "Home"
+# -------------------------------------------------------------------------
+st.markdown("""
+<style>
+/* Hide the original label */
+section[data-testid="stSidebar"] .css-10trblm, 
+section[data-testid="stSidebar"] .css-1v0mbdj {
+    visibility: hidden !important;
+}
+
+/* Insert our custom label */
+section[data-testid="stSidebar"] .css-10trblm:before,
+section[data-testid="stSidebar"] .css-1v0mbdj:before {
+    content: "Home";
+    visibility: visible !important;
+    position: relative;
+    top: 0;
+    left: 0;
+    font-size: 20px !important;
+    font-weight: 600 !important;
+    color: white !important;
+}
+</style>
+""", unsafe_allow_html=True)
