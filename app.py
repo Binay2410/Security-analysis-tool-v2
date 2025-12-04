@@ -64,10 +64,10 @@ st.markdown("""
     margin-bottom:20px;"
 >
     <h1 style="color:#2A61FF; font-size:32px; margin:0;">
-        🔐 Security Group Analysis Tool
+        🔐 Security Analysis Tool
     </h1>
     <p style="color:#555; margin-top:4px; font-size:14px;">
-        Compare client Workday security groups with industry-standard configuration.
+        Compare Workday security set-up with industry-standard configuration.
     </p>
 </div>
 """, unsafe_allow_html=True)
