@@ -33,9 +33,9 @@ diff_table = st.session_state["diff_results"]["diff_table"].copy()
 # SECTION 1 — MISSING IN CLIENT
 # ------------------------------------------------------------------------------
 st.markdown("""
-<h3 style="color:#D62828;">ℹ️ Security Group(s) Does Not Exist in Tenant</h3>
+<h3 style="color:#D62828;">Missing Security Group(s)</h3>
 <p style="margin-bottom:12px; color:#666;">
-These SGs exist in the standard configuration but are missing from the client tenant.
+These Security Group(s) should exist as per Industry Standards if the corresponding modules are implemented, but are missing from Workday tenant.
 </p>
 """, unsafe_allow_html=True)
 
@@ -49,9 +49,9 @@ else:
 # SECTION 2 — CLIENT ONLY SGs
 # ------------------------------------------------------------------------------
 st.markdown("""
-<h3 style="color:#E67E22;">⚠️ Custom Security Group(s)</h3>
+<h3 style="color:#E67E22;">Custom Security Group(s)</h3>
 <p style="margin-bottom:12px; color:#666;">
-These SGs exist in the client tenant but are not part of the standard configuration.
+These Security Group(s) exist in Workday tenant but do not appear in industry-standards and may represent client-specific custom groups.
 </p>
 """, unsafe_allow_html=True)
 
@@ -65,7 +65,7 @@ else:
 # SECTION 3 — DETAILED ROW-LEVEL DIFFERENCES
 # ------------------------------------------------------------------------------
 st.markdown("""
-<h3 style="color:#2A61FF;">🟰 Detailed Row-Level Differences</h3>
+<h3 style="color:#2A61FF;">Detailed Security Analysis</h3>
 <p style="margin-bottom:12px; color:#666;">
 Below are detailed access-level differences for each security group.
 Missing = red, Extra = black.
