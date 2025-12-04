@@ -14,25 +14,25 @@ st.set_page_config(
     page_icon="🏠"
 )
 
-st.markdown(
-    """
-    <style>
-    section[data-testid="stSidebar"] .css-1v3fvcr:first-child::after {
-        content: "Home";
-        font-weight: 600;
-        font-size: 16px;
-        color: white;
-        position: relative;
-        left: 10px;
-        top: -2px;
-    }
-    section[data-testid="stSidebar"] .css-1v3fvcr:first-child > * {
-        display: none;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# ----- FORCE SIDEBAR TITLE TO "Home" -----
+st.markdown("""
+<style>
+
+header[data-testid="stSidebarHeader"] div {
+    display: none;
+}
+
+header[data-testid="stSidebarHeader"]::after {
+    content: "Home";
+    font-size: 20px;
+    font-weight: 600;
+    color: white;
+    padding-left: 15px;
+}
+
+</style>
+""", unsafe_allow_html=True)
+
 
 
 # Sidebar label override
