@@ -166,7 +166,7 @@ c1, c2, c3 = st.columns(3)
 c1.markdown(f"""
 <div style="padding:18px; background:#FFF; border-radius:10px;
             box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #EEE;">
-    <h3 style="margin:0; font-size:20px; color:#2A61FF;">🛡️ Missing in Client</h3>
+    <h3 style="margin:0; font-size:20px; color:#2A61FF;">🛡️ Missing Security Group(s)</h3>
     <p style="font-size:28px; margin:0; font-weight:bold;">{len(only_in_std)}</p>
 </div>
 """, unsafe_allow_html=True)
@@ -174,7 +174,7 @@ c1.markdown(f"""
 c2.markdown(f"""
 <div style="padding:18px; background:#FFF; border-radius:10px;
             box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #EEE;">
-    <h3 style="margin:0; font-size:20px; color:#FF8C00;">⚙️ Custom SGs</h3>
+    <h3 style="margin:0; font-size:20px; color:#FF8C00;">⚙️ Custom Security Group(s)</h3>
     <p style="font-size:28px; margin:0; font-weight:bold;">{len(only_in_client)}</p>
 </div>
 """, unsafe_allow_html=True)
