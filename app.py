@@ -14,6 +14,27 @@ st.set_page_config(
     page_icon="🏠"
 )
 
+st.markdown(
+    """
+    <style>
+    section[data-testid="stSidebar"] .css-1v3fvcr:first-child::after {
+        content: "Home";
+        font-weight: 600;
+        font-size: 16px;
+        color: white;
+        position: relative;
+        left: 10px;
+        top: -2px;
+    }
+    section[data-testid="stSidebar"] .css-1v3fvcr:first-child > * {
+        display: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+
 # Sidebar label override
 st.markdown("""
 <style>
