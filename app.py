@@ -181,3 +181,14 @@ else:
 
 
 st.markdown("➡️ Use the sidebar for full Difference Report and Similarity Analysis.")
+
+
+# ------------------------------------------------------------------------------
+# COMPUTE SIMILARITY ONCE
+# ------------------------------------------------------------------------------
+from utils.similarity import compute_similarity
+
+if "similarity_results" not in st.session_state:
+    with st.spinner("Computing similarity analysis..."):
+        sim_df = compute_similarity(client_df)
+        st.session_state["similarity_results"] = sim_df
