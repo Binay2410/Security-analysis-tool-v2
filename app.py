@@ -182,7 +182,7 @@ c2.markdown(f"""
 c3.markdown(f"""
 <div style="padding:18px; background:#FFF; border-radius:10px;
             box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #EEE;">
-    <h3 style="margin:0; font-size:20px; color:#00A65A;">🔍 Differences Found</h3>
+    <h3 style="margin:0; font-size:20px; color:#00A65A;">🔍 Security Group - Differences Found</h3>
     <p style="font-size:28px; margin:0; font-weight:bold;">{len(diff_table)}</p>
 </div>
 """, unsafe_allow_html=True)
