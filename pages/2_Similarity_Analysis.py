@@ -1,22 +1,35 @@
 import streamlit as st
-from utils.similarity import compute_similarity
+import pandas as pd
 
-st.title("🧬 Similarity Analysis")
+# ------------------------------------------------------------------------------
+# PAGE HEADER
+# ------------------------------------------------------------------------------
+st.markdown("""
+<h2 style="color:#2A61FF; margin-bottom:0;">🧬 Similarity Analysis</h2>
+<p style="color:#555; margin-top:4px; font-size:14px;">
+This analysis identifies security groups that share similar access patterns.
+Useful for detecting duplicates, redundancies, or merge candidates.
+</p>
+<hr style="margin-top:0;">
+""", unsafe_allow_html=True)
 
+# ------------------------------------------------------------------------------
+# VALIDATE DATA
+# ------------------------------------------------------------------------------
 if "client_df" not in st.session_state:
-    st.error("Please upload a client file on the main page.")
+    st.error("⚠️ Please upload a client file on the main page.")
     st.stop()
 
-client_df = st.session_state["client_df"]
+if "similarity_results" not in st.session_state:
+    st.error("⚠️ Similarity has not been computed yet. Please rerun the home page.")
+    st.stop()
 
-@st.cache_data(show_spinner=True)
-def get_similarity(df):
-    return compute_similarity(df)
+sim_df = st.session_state["similarity_results"]
 
-st.write("Computing SG similarity (this is done once per upload and cached)...")
-sim_df = get_similarity(client_df)
-
-if sim_df.empty:
-    st.info("No SG pairs found with similarity above threshold.")
-else:
-    st.dataframe(sim_df)
+# ------------------------------------------------------------------------------
+# SUMMARY CARD
+# ------------------------------------------------------------------------------
+st.markdown("""
+<div style="padding:18px; background:#FFF; border-radius:10px; 
+            box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #EEE;">
+    <h3 style="margin:0; font-size:20px;
