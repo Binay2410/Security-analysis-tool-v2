@@ -9,7 +9,17 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("🔐 Security Group Analysis Tool")
+st.markdown("""
+<div style="padding: 20px 10px; border-bottom: 1px solid #EEE;">
+    <h1 style="color:#2A61FF; font-size: 32px; margin: 0;">
+        🔐 Security Group Analysis Tool
+    </h1>
+    <p style="color:#555; margin-top: 4px; font-size:14px;">
+        Enterprise-grade comparison, insights & AI-driven analysis
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
 
 STANDARD_FILE = "standard_data.xlsx"
 
