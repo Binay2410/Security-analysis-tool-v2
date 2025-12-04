@@ -73,9 +73,31 @@ else:
 st.subheader("📊 Summary Overview")
 
 c1, c2, c3 = st.columns(3)
-c1.metric("Missing in Client (Std Only)", len(only_in_std))
-c2.metric("Client Only SGs", len(only_in_client))
-c3.metric("Row-Level Differences", len(diff_table))
+
+c1.markdown(f"""
+<div style="padding:18px; background:#FFF; border-radius:10px; 
+            box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #EEE;">
+    <h3 style="margin:0; font-size:20px; color:#2A61FF;">Missing in Client</h3>
+    <p style="font-size:28px; margin:0; font-weight:bold;">{len(only_in_std)}</p>
+</div>
+""", unsafe_allow_html=True)
+
+c2.markdown(f"""
+<div style="padding:18px; background:#FFF; border-radius:10px; 
+            box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #EEE;">
+    <h3 style="margin:0; font-size:20px; color:#FF8C00;">Client-Only SGs</h3>
+    <p style="font-size:28px; margin:0; font-weight:bold;">{len(only_in_client)}</p>
+</div>
+""", unsafe_allow_html=True)
+
+c3.markdown(f"""
+<div style="padding:18px; background:#FFF; border-radius:10px; 
+            box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #EEE;">
+    <h3 style="margin:0; font-size:20px; color:#00A65A;">Differences Found</h3>
+    <p style="font-size:28px; margin:0; font-weight:bold;">{len(diff_table)}</p>
+</div>
+""", unsafe_allow_html=True)
+
 
 st.markdown("---")
 
