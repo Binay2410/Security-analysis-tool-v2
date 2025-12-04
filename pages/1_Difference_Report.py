@@ -132,44 +132,49 @@ diff_table = diff_table[
 # ------------------------------------------------------------------------------
 # RENDER HTML TABLE CLEANLY
 # ------------------------------------------------------------------------------
+import html
+
 def render_html_table(df: pd.DataFrame) -> str:
-    html = """
+    html_str = """
     <table style='width:100%; border-collapse: collapse; font-size:14px;'>
     """
 
     # Header
-    html += "<tr>"
+    html_str += "<tr>"
     for col in df.columns:
-        html += f"""
+        html_str += f"""
         <th style="
             border:1px solid #DDD; 
             padding:8px; 
             background:#F0F4FF; 
             font-weight:600;
             color:#2A2A2A;">
-            {col}
+            {html.escape(col)}
         </th>
         """
-    html += "</tr>"
+    html_str += "</tr>"
 
     # Rows
     for _, row in df.iterrows():
-        html += "<tr>"
+        html_str += "<tr>"
         for col in df.columns:
             val = row[col] if pd.notna(row[col]) else ""
-            html += f"""
+
+            # For everything EXCEPT Difference Items → escape HTML
+            if col == "Difference Items":
+                safe_val = val
+            else:
+                safe_val = html.escape(str(val))
+
+            html_str += f"""
             <td style="
                 border:1px solid #EEE; 
                 padding:8px; 
                 vertical-align:top;">
-                {val}
+                {safe_val}
             </td>
             """
-        html += "</tr>"
+        html_str += "</tr>"
 
-    html += "</table>"
-    return html
-
-
-html_table = render_html_table(diff_table)
-st.write(html_table, unsafe_allow_html=True)
+    html_str += "</table>"
+    return html_str
