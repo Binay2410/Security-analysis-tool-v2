@@ -6,19 +6,39 @@ from utils.comparator import compute_differences
 from utils.similarity import compute_similarity
 
 # -------------------------------------------------------------------------
-# PAGE CONFIG
+# FORCE SIDEBAR TO DISPLAY "Home" INSTEAD OF APP FILENAME
 # -------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Security Group Analysis Tool",
-    layout="wide"
+    page_title="Home",
+    layout="wide",
+    page_icon="🏠"
 )
+
+# Sidebar label override
+st.markdown("""
+<style>
+/* Replace the sidebar page title (which normally shows filename) */
+section[data-testid="stSidebar"] .css-10trblm, 
+section[data-testid="stSidebar"] .css-1v0mbdj {
+    visibility: hidden;
+}
+section[data-testid="stSidebar"] .css-10trblm:before, 
+section[data-testid="stSidebar"] .css-1v0mbdj:before {
+    content: "Home";
+    visibility: visible;
+    font-weight: 600;
+    font-size: 20px;
+    color: white;
+}
+</style>
+""", unsafe_allow_html=True)
 
 # -------------------------------------------------------------------------
 # TOP HEADER
 # -------------------------------------------------------------------------
 st.markdown("""
 <div style="
-    padding: 18px 10px; 
+    padding: 18px 10px;
     border-bottom: 1px solid #EEE;
     margin-bottom:20px;"
 >
@@ -31,12 +51,13 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+
 # -------------------------------------------------------------------------
 # UPLOAD SECTION
 # -------------------------------------------------------------------------
 st.markdown("""
 <div style="
-    background:#F5F7FB; 
+    background:#F5F7FB;
     padding:20px;
     border-radius:10px;
     border:1px solid #E0E0E0;
@@ -48,6 +69,7 @@ st.markdown("""
 uploaded = st.file_uploader("", type=["xlsx"])
 
 st.markdown("</div>", unsafe_allow_html=True)
+
 
 # -------------------------------------------------------------------------
 # LOAD STANDARD DATA
@@ -64,12 +86,13 @@ if "std_df" not in st.session_state:
 
 std_df = st.session_state["std_df"]
 
+
 # -------------------------------------------------------------------------
 # PROCESS CLIENT FILE
 # -------------------------------------------------------------------------
 if uploaded and (
-    "uploaded_filename" not in st.session_state or 
-    st.session_state["uploaded_filename"] != uploaded.name
+    "uploaded_filename" not in st.session_state
+    or st.session_state["uploaded_filename"] != uploaded.name
 ):
     try:
         raw_client_df = pd.read_excel(uploaded)
@@ -94,6 +117,7 @@ if "client_df" not in st.session_state:
 
 client_df = st.session_state["client_df"]
 
+
 # -------------------------------------------------------------------------
 # COMPUTE DIFFERENCES (cached)
 # -------------------------------------------------------------------------
@@ -110,6 +134,7 @@ only_in_std = st.session_state["diff_results"]["only_in_std"]
 only_in_client = st.session_state["diff_results"]["only_in_client"]
 diff_table = st.session_state["diff_results"]["diff_table"]
 
+
 # -------------------------------------------------------------------------
 # SUMMARY CARDS
 # -------------------------------------------------------------------------
@@ -118,7 +143,7 @@ st.subheader("📊 Summary Overview")
 c1, c2, c3 = st.columns(3)
 
 c1.markdown(f"""
-<div style="padding:18px; background:#FFF; border-radius:10px; 
+<div style="padding:18px; background:#FFF; border-radius:10px;
             box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #EEE;">
     <h3 style="margin:0; font-size:20px; color:#2A61FF;">🛡️ Missing in Client</h3>
     <p style="font-size:28px; margin:0; font-weight:bold;">{len(only_in_std)}</p>
@@ -126,7 +151,7 @@ c1.markdown(f"""
 """, unsafe_allow_html=True)
 
 c2.markdown(f"""
-<div style="padding:18px; background:#FFF; border-radius:10px; 
+<div style="padding:18px; background:#FFF; border-radius:10px;
             box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #EEE;">
     <h3 style="margin:0; font-size:20px; color:#FF8C00;">⚙️ Custom SGs</h3>
     <p style="font-size:28px; margin:0; font-weight:bold;">{len(only_in_client)}</p>
@@ -134,7 +159,7 @@ c2.markdown(f"""
 """, unsafe_allow_html=True)
 
 c3.markdown(f"""
-<div style="padding:18px; background:#FFF; border-radius:10px; 
+<div style="padding:18px; background:#FFF; border-radius:10px;
             box-shadow:0 2px 8px rgba(0,0,0,.08); border:1px solid #EEE;">
     <h3 style="margin:0; font-size:20px; color:#00A65A;">🔍 Differences Found</h3>
     <p style="font-size:28px; margin:0; font-weight:bold;">{len(diff_table)}</p>
@@ -143,19 +168,22 @@ c3.markdown(f"""
 
 st.markdown("---")
 
+
 # -------------------------------------------------------------------------
 # TOP 10 DIFFERENCES
 # -------------------------------------------------------------------------
-def count_difference_items(std_val, client_val):
+def count_diff(std_val, client_val):
     std_items = {x.strip() for x in str(std_val).splitlines() if x.strip()}
     client_items = {x.strip() for x in str(client_val).splitlines() if x.strip()}
     return len(std_items - client_items) + len(client_items - std_items)
 
+
 def build_sg_diff_summary(diff_df):
     summary = {}
+
     for _, row in diff_df.iterrows():
         sg = row["SG Name"]
-        diff_count = count_difference_items(row["Standard Value"], row["Client Value"])
+        diff_count = count_diff(row["Standard Value"], row["Client Value"])
         summary[sg] = summary.get(sg, 0) + diff_count
 
     return (
@@ -166,20 +194,20 @@ def build_sg_diff_summary(diff_df):
         .reset_index(drop=True)
     )
 
+
 st.subheader("🏆 Top 10 SGs With Maximum Differences")
 
 if diff_table.empty:
     st.info("✔ No differences found.")
 else:
-    top10 = build_sg_diff_summary(diff_table).head(10)
-    st.dataframe(top10, use_container_width=True)
+    st.dataframe(build_sg_diff_summary(diff_table).head(10), use_container_width=True)
 
 st.markdown("➡️ Use the sidebar for full Difference Report and Similarity Analysis.")
+
 
 # -------------------------------------------------------------------------
 # COMPUTE SIMILARITY (cached)
 # -------------------------------------------------------------------------
 if "similarity_results" not in st.session_state:
     with st.spinner("Computing SG similarity..."):
-        sim_df = compute_similarity(client_df)
-        st.session_state["similarity_results"] = sim_df
+        st.session_state["similarity_results"] = compute_similarity(client_df)
