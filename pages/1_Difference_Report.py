@@ -33,7 +33,7 @@ diff_table = st.session_state["diff_results"]["diff_table"].copy()
 # SECTION 1 — MISSING IN CLIENT
 # ------------------------------------------------------------------------------
 st.markdown("""
-<h3 style="color:#D62828;">❌ Security Group(s) Does Not Exist in Tenant</h3>
+<h3 style="color:#D62828;">ℹ️ Security Group(s) Does Not Exist in Tenant</h3>
 <p style="margin-bottom:12px; color:#666;">
 These SGs exist in the standard configuration but are missing from the client tenant.
 </p>
