@@ -40,8 +40,10 @@ These Security Group(s) should exist as per Industry Standards if the correspond
 """, unsafe_allow_html=True)
 
 if only_in_std:
-    st.dataframe(pd.DataFrame({"Security Group": only_in_std}),
-                 use_container_width=True)
+    missing_df = pd.DataFrame({"Security Group": only_in_std}).reset_index(drop=True)
+    missing_df.insert(0, "S.No", range(1, len(missing_df) + 1))
+    st.dataframe(missing_df, use_container_width=True, hide_index=True)
+
 else:
     st.success("✔ No missing security groups.")
 
@@ -56,8 +58,10 @@ These Security Group(s) exist in Workday tenant but do not appear in industry-st
 """, unsafe_allow_html=True)
 
 if only_in_client:
-    st.dataframe(pd.DataFrame({"Security Group": only_in_client}),
-                 use_container_width=True)
+    custom_df = pd.DataFrame({"Security Group": only_in_client}).reset_index(drop=True)
+    custom_df.insert(0, "S.No", range(1, len(custom_df) + 1))
+    st.dataframe(custom_df, use_container_width=True, hide_index=True)
+
 else:
     st.success("✔ No custom security groups.")
 
@@ -170,4 +174,5 @@ styled_df = display_df.style.format({
 # ------------------------------------------------------------------------------
 # DISPLAY STYLED TABLE
 # ------------------------------------------------------------------------------
-st.write(styled_df.to_html(), unsafe_allow_html=True)
+st.write(styled_df.hide(axis="index").to_html(), unsafe_allow_html=True)
+
