@@ -223,7 +223,8 @@ if diff_table.empty:
 else:
     top10 = build_sg_diff_summary(diff_table).head(10).reset_index(drop=True)
     top10.insert(0, "S.No", range(1, len(top10) + 1))
-    st.dataframe(top10, use_container_width=True)
+    st.dataframe(top10, use_container_width=True, hide_index=True)
+
 
 
 st.markdown("➡️ Use the sidebar for full Difference Report and Similarity Analysis.")
