@@ -175,20 +175,20 @@ def color_diff(val):
 
 
 # ------------------------------------------------------------------
-# ADD SERIAL NUMBER (START FROM 1)
+# ADD SERIAL NUMBER (START FROM 1) - DISPLAY ONLY (do not touch diff_table)
 # ------------------------------------------------------------------
 
-diff_table = diff_table.reset_index(drop=True)
-diff_table.insert(0, "S.No", range(1, len(diff_table) + 1))
-
-styled_df = diff_table[[
-    "S.No",
+display_df = diff_table[[
     "Security Group",
     "Access Type",
     "Standard Value",
     "Client Value",
     "Difference Items"
-]].style.format({
+]].reset_index(drop=True)
+
+display_df.insert(0, "S.No", range(1, len(display_df) + 1))
+
+styled_df = display_df.style.format({
     "Difference Items": color_diff
 }, escape="html")
 
@@ -196,4 +196,5 @@ styled_df = diff_table[[
 # DISPLAY STYLED TABLE
 # ------------------------------------------------------------------
 st.write(styled_df.hide(axis="index").to_html(), unsafe_allow_html=True)
+
 
