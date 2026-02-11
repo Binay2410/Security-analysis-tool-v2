@@ -44,16 +44,16 @@ if only_in_std:
     missing_df.insert(0, "S.No", range(1, len(missing_df) + 1))
 
     st.dataframe(
-        missing_df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "S.No": st.column_config.NumberColumn(width=120),  # ~20%
-            "Security Group": st.column_config.TextColumn(width="large"),  # ~80%
-        }
-    )
+    missing_df,  # or custom_df
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        "S.No": st.column_config.NumberColumn(width=100),      # small column
+        "Security Group": st.column_config.TextColumn(width=400),  # wide column
+    }
+)
 
-
+ 
 else:
     st.success("✔ No missing security groups.")
 
@@ -72,14 +72,15 @@ if only_in_client:
     custom_df.insert(0, "S.No", range(1, len(custom_df) + 1))
 
     st.dataframe(
-        custom_df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "S.No": st.column_config.NumberColumn(width=120),  # ~20%
-            "Security Group": st.column_config.TextColumn(width="large"),  # ~80%
-        }
-    )
+    missing_df,  # or custom_df
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        "S.No": st.column_config.NumberColumn(width=100),      # small column
+        "Security Group": st.column_config.TextColumn(width=400),  # wide column
+    }
+)
+
 
 
 else:
