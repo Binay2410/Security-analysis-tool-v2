@@ -222,8 +222,32 @@ if diff_table.empty:
     st.info("✔ No differences found.")
 else:
     top10 = build_sg_diff_summary(diff_table).head(10).reset_index(drop=True)
-    top10.insert(0, "S.No", range(1, len(top10) + 1))
-    st.dataframe(top10, use_container_width=True, hide_index=True)
+top10.insert(0, "S.No", range(1, len(top10) + 1))
+
+styled_df = (
+    top10.style
+    .set_properties(subset=["S.No"], **{"text-align": "center"})
+    .set_properties(subset=["Total Differences"], **{"text-align": "center"})
+    .set_properties(subset=["Security Group"], **{"text-align": "left"})
+)
+
+st.dataframe(
+    styled_df,
+    use_container_width=True,
+    hide_index=True,
+    column_config={
+        "S.No": st.column_config.NumberColumn(
+            width=80,  # ≈ 2 cm
+        ),
+        "Total Differences": st.column_config.NumberColumn(
+            width=270,  # ≈ 7 cm
+        ),
+        "Security Group": st.column_config.TextColumn(
+            width="large"  # takes remaining space
+        ),
+    }
+)
+
 
 
 
