@@ -221,7 +221,10 @@ st.subheader("🏆 Top 10 SGs With Maximum Differences")
 if diff_table.empty:
     st.info("✔ No differences found.")
 else:
-    st.dataframe(build_sg_diff_summary(diff_table).head(10), use_container_width=True)
+    top10 = build_sg_diff_summary(diff_table).head(10).reset_index(drop=True)
+    top10.insert(0, "S.No", range(1, len(top10) + 1))
+    st.dataframe(top10, use_container_width=True)
+
 
 st.markdown("➡️ Use the sidebar for full Difference Report and Similarity Analysis.")
 
