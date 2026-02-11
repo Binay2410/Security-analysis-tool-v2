@@ -145,15 +145,26 @@ def color_diff(val):
     return "<br>".join(colored)
 
 
-styled_df = diff_table[[
+# ------------------------------------------------------------------------------
+# ADD SERIAL NUMBER (START FROM 1)
+# ------------------------------------------------------------------------------
+
+display_df = diff_table[[
     "Security Group",
     "Access Type",
     "Standard Value",
     "Client Value",
     "Difference Items"
-]].style.format({
+]].reset_index(drop=True)
+
+display_df.insert(0, "S.No", range(1, len(display_df) + 1))
+
+# ------------------------------------------------------------------------------
+
+styled_df = display_df.style.format({
     "Difference Items": color_diff
 }, escape="html")
+
 
 
 # ------------------------------------------------------------------------------
