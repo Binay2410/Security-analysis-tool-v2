@@ -180,8 +180,8 @@ def color_diff(val):
 display_df = diff_table[[
     "Security Group",
     "Access Type",
-    "Standard Value",
-    "Client Value",
+    # "Standard Value",   # Hidden intentionally
+    # "Client Value",     # Hidden intentionally
     "Difference Items"
 ]].copy()
 
