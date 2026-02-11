@@ -43,19 +43,29 @@ if only_in_std:
     missing_df = pd.DataFrame({"Security Group": only_in_std}).reset_index(drop=True)
     missing_df.insert(0, "S.No", range(1, len(missing_df) + 1))
 
-    st.dataframe(
-    missing_df,  # or custom_df
-    use_container_width=True,
-    hide_index=True,
-    column_config={
-        "S.No": st.column_config.NumberColumn(width=100),      # small column
-        "Security Group": st.column_config.TextColumn(width=400),  # wide column
-    }
-)
+    missing_html = missing_df.to_html(index=False, escape=True)
 
- 
+    st.write(
+        """
+        <style>
+        .mini-table table { width:100%; table-layout:fixed; border-collapse:collapse; }
+        .mini-table th, .mini-table td { padding: 8px; border: 1px solid #E6E6E6; }
+        .mini-table th { text-align:center; }
+        .mini-table td:nth-child(1), .mini-table th:nth-child(1) { width:20%; text-align:center; }
+        .mini-table td:nth-child(2), .mini-table th:nth-child(2) { width:80%; }
+        .mini-table td:nth-child(2) { text-align:left; }
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.write(f"<div class='mini-table'>{missing_html}</div>", unsafe_allow_html=True)
 else:
     st.success("✔ No missing security groups.")
+
+
+ 
+
 
 # ------------------------------------------------------------------------------
 # SECTION 2 — CLIENT ONLY SGs
@@ -71,21 +81,13 @@ if only_in_client:
     custom_df = pd.DataFrame({"Security Group": only_in_client}).reset_index(drop=True)
     custom_df.insert(0, "S.No", range(1, len(custom_df) + 1))
 
-    st.dataframe(
-        custom_df,
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "S.No": st.column_config.NumberColumn(width=120),  # ~20%
-            "Security Group": st.column_config.TextColumn(width="large"),  # ~80%
-        }
-    )
+    custom_html = custom_df.to_html(index=False, escape=True)
 
-
-
-
+    # (CSS already injected above; no need to re-inject unless you want to)
+    st.write(f"<div class='mini-table'>{custom_html}</div>", unsafe_allow_html=True)
 else:
     st.success("✔ No custom security groups.")
+
 
 # ------------------------------------------------------------------------------
 # SECTION 3 — DETAILED ROW-LEVEL DIFFERENCES
